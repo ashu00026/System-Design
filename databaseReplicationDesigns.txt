@@ -1,0 +1,58 @@
+Data Replication and migration:
+
+Data replication involves copying data from one location to another, while data migration is manually moving data to a new location. Replication is more common in mature companies 
+and those using cloud solutions.
+In a replication scenario, clients are connected to a server with a database, but the database could fail due to various reasons. To address this, a replica (or backup) of the 
+original database is created. Data consistency is maintained by sending write requests to the primary database, while read requests are directed to both the primary and the replica.
+This approach benefits read-intensive applications, as write operations are infrequent.
+The benefits of a primary-replica architecture include fault tolerance, improved read speeds, and relative simplicity. If the primary database fails, the replica can take over. 
+Read requests can be distributed among multiple primary and replica nodes. However, there are drawbacks, including potential consistency issues if there are in-flight messages, 
+and slightly slower write speeds due to the added complexity. Fault tolerance comes at the cost of increased latency.
+In summary, data replication is an essential practice in maintaining data availability and fault tolerance in software engineering, particularly in mature companies or those using cloud solutions.
+While it offers benefits, it also introduces challenges related to data consistency and latency.
+
+Links:
+	https://luanjunyi.medium.com/system-design-paradigm-primary-replica-pattern-dc621bf195f1
+	
+Data migration:
+	Transfering data form one db to another
+Data Replication:
+	Data duplicate{making muliple dbs to avoid spf}[Backup]
+	Example you have two instances of dbs to store the same data.
+		one cam be used to perform read/write operations While other can be used to perform only read Operations{Once the primary has the write, then can be be copied to replica}
+		Incase the primary is down then the replica is primary..and when the prev primary is up now that can be treated as replica
+		Benifits:
+			Simple
+			Improved Read requests
+			Fault Tolorence
+		Cons:
+			Consistency
+			write are slower as it also has to copied to the replicas
+			Latency goes down.
+		Many Configuratiosn can be performed 
+			read commited
+			read uncommited
+			Split-brain Problem:
+				Have multiple primary dbs.
+				Auto reconciliation is very hard
+				Manual reconciliation is slow.
+			Write Ahead Log:
+				Sequence of actions that happen in db
+				Can be replayed multiple times or rolled-back
+				Supports Transaction
+				Timestamps are Tricky as the timestamps can be different on both dbs
+					We can send timestamps with the request so that they are consistent
+			Change Data Capture:
+				Basically this can help when there is a depencency of context on storing to db.
+				Instead of blindly coping the data to the replica , CDC works in taking the request and modify them as per required and savve in db.
+				Uses pub-sub Mehtod.
+				Can have many different subscribers /replicas and copy data to them using lib they give.
+				Ideal for cross-database replications{Use one as read optimised and other as write Optimized}[casandra and RDS]
+				Allows transactions of data from source to destination.
+			Write Aplification Problems:
+				One write operation explodes into multiple replicas
+				puts load on the primary db
+				choices between inconsisteny and latency
+				limited writers is one Solution
+				Cluster architecture is one solution.
+				

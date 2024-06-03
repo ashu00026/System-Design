@@ -1,0 +1,56 @@
+Database Migrations:
+	Take data from the source and put it in some destination db.
+	Use-Cases:
+		-Sharding
+		-Migrating from Sql to No-sql or vice versa
+		-creating a replia/backup
+	
+	Tradtional Approach:
+		1.stop the current db.
+		2.Do a DB-Dump--Gives all the data in db {export}
+		3.db upload.{bulk upload}
+		4.start the db.
+		-All current requests are failing but this is consitent and eventually availability.
+		-downtime can be a issue here.
+		To over come this downtime we can use This approach below by not stoping the primary db.
+		
+		Lets assume with 1 second there are 100 of insert requests,There are 1000000 entries ..
+	
+	Modern Approach:
+		1.note the current timing {assume x}
+		2.Do a DB-copy{Copying for the whole db}[assume 100000 entries]
+		3.Note the current timinig{assume y}
+		4.Do a db-copy {Copying for the whole db where timestamp>x}{DB-Copy -->all sorts of operations are logged in a db and can be used to recreate a db}[LOG of Operations]{assume 10000 entries}
+		5.note Timing again {assume z}
+		6.add an insert and update trigger to old_db.
+		7.do a db-copy{Copying fot the whole db where timeStamp>y && timeStamp<z}{assume entries 100}
+		NOTE: do upsert on triggers as the last operation can/cannot be present for update commands.
+
+Migrating CLients according to the Db change:
+	All the Clients to the old db should be changed to newDb at a time or there we might see data inconsistency{One may delete/add/update record in new but clients using old are not accessible to it}
+	One way to counter this issue is to create a view, A view which has properties of old db on the new Db records.Basically it has to mimic the old user table using the new User table.
+		Steps:
+			Assumtion: old_user table has entities as B and C and new_User table has an additional entity [A,B,C]
+			1)Create a view which behaves like the old Table.[Create View old_user(Select B,C from new_User)]
+				Cons:Reads are fine, Updates/insertions can have eventualAvailability.To overCome this step2
+			2)Rename view to Old_user and rename old_user to obsolete.{View is created because of code stability,previously written code was there for model of old_user Db,slowly it can change now to newUserDb}
+				-this should be Transactional.
+			3)now after the code is changed now point the clients directly to NewUser and restart the servers{clients}
+			4)Drop the view.
+			5)Manual or Automated validation of data.
+
+Migration Across regions:
+	Azure-->aws or Aws-->azure 
+	Migration was previously handled but to these across-soltions migration is very complex.
+	We have to address two major things mostly{from the prev process}
+		1)add an insert and update trigger to old_db.
+		2)Create a view which behaves like the old Table.[Create View old_user(Select B,C from new_User)]
+	
+	Solution:
+		1)adding a DbProxy will help resolve the 1st problem:
+			-Dbproxy runs all the read requests to the old db lets say azure and write commands are written to both the dbs {Aws and Azure}
+		2)Db proxy is the view for this solution.
+		rest steps are the same as above.	
+		cons:Requires 2 restarts of servers.
+		
+		

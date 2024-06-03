@@ -1,0 +1,38 @@
+SpatialDbs:
+	How can you store location in db?
+		We can use bits to store regions in x and y axis
+		-32 bits for x and 32 bits for y can be assigned when using a 64 bit system.
+			{Initially the pointer can be at x and y axis i.e 0,0}
+			-regions can be mapped to 32 bit decimal values {that is for a 64 bit system we can have 32*32 squares to identify locations..this gives better accuracy}
+			If accuracy is not a concern or we have to define large regions then we can decrease the bit size, which gives inacurate data but is fast 
+				-this works by the algorithm of binary search. range of values for x are -16 t0 +16 and for y also -16 to +16..
+			when the bit value is 0 for x the pointer search on left of the current pointer , when the bit value is 1 the pointer search on the right of the current pointer.
+				Similary with y 1-->up and 0-->down.
+			lets assume to get Region for india in the world .. lets assume it can lie in 6 bits and soo the db value for the region can be {x=1 y=6} similarly if we have to get the regions inside india.
+				we have to increase the bits value to get more granulaty over the range 
+				{X=10,y=3}-->we can make binary search on its bits to get region ex:-10->0000000000001010 and 3->000000000000011 for a 32 bits system !
+				If two numbers are close by we can find it by checking how many msbs are different from the right..more the difference more the distance
+					example {5,4},{5,5}-->110010 and 110011 here only 1 bit differ to the right most and hence they are more close
+			Pros:
+				-Representation.
+				-Proximity.
+				-Partioning.
+			Cons:
+				some cases the proximity is very high but still we can see large difference in the calculation example:
+					1001010101..01
+					0110101010..10
+					This occurs mostly if They are close-by but are in different regions.
+					
+		we can try and fix this by using Quad Tree by applying segment tree and internal tree ds.{search for quad ,segement and internal trees}
+			Hilbert Curve:
+				https://blog.christianperone.com/2015/08/googles-s2-geometry-on-the-sphere-cells-and-hilbert-curve/
+				https://www.youtube.com/watch?v=3s7h2MHQtxc
+			Fractals:
+				https://www.youtube.com/watch?v=gB9n2gHsHN4
+			Segment trees:
+				https://www.youtube.com/watch?v=W4KUVTjh8RQ
+			Z-order Curve:
+				https://en.wikipedia.org/wiki/Z-order_curve
+		Go for making range queries efficient by using some curves like Hilbert,z-curve and L-curve The basic idea of these curves is to convert a 2d to 1d somehow by using Fractals
+		
+		

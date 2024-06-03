@@ -1,0 +1,138 @@
+System Design:
+	Sending a message from A to B:
+		1)Choose a Language.
+		2)findout location (IP) of B.
+		3)find out efficient way to converse.{Many protocols:internal,external,vdo processing...etc}
+	What layers?{high Level}
+		--Behavioral Layer
+		--Route Later
+		--Physical Layer
+	Physical Layer:
+		message passed??
+			--how do system read the message-->>(Binary{0,1}) NEEDS-->start-delimeter-->end-delimeter-->time-delimeter-->Voltage-delimeter{defines 0 or 1}.
+			--Basically hardware determines how the message is to be passed.{start-delimeter[message info]end-delimeter} message info can/should be encoded here.
+			--Physical layer determines these Qualites.
+	Route Layer:
+		Routing Done?
+			--Routing the network is not necessary unless you dont want to broadcast the message.
+			--Routing helps in sending the message only to the required consumer.
+			--To route the message to the correct device we need IP Address or the Mac Address of the consumer.
+			--Router decodes the message.
+			--Router gets the ip address from DNS->has the required hardware location mapped to the domain name of the consumer (Routers call DNS(Domain Name Server))
+			--Internet-backbone checks the route and makes requests to multiple routers to send the message to the consumer[Server]
+	Behavioral Layer:	
+		Conservation Type?
+			--A to B validations of connection takes place here {Is this a valid Connection Request, Can we establish the Connection to the server and all}
+				--Frequency{How frequent the messages can be}
+				--Directional{Single or both[Peer to peer or only uni]}
+				--Context{acknoledgment}
+			--Delimeters are associated to single message while conversations are longer scope based
+	
+	
+	Mapping these layers to OSI MOdel:
+		Physical Layer:
+		Route Layer:
+			--Data-link Layer(talks about mac addresses)
+			--Netwrok Layer(talks about Ip addresses)
+			--Transport Layer
+		Behavioral Layer:
+			-Session Layer
+		Presentation Layer && Application Layer	{CODING and Things}
+		
+	Hitting a server Flow:
+		Browser---->Network interface card of the system(NIC[connect to network])-->Router(InternetService Provider)-->DNS Server(Multiple) Use Internet backbone and then route the message--->
+								router<N>..., -->Consumer(Google.com)
+		Same flow for response in backward direction.							
+	DNS:
+		Handles the Mapping of Domain Name to IP addresses of the Servers so in future even if the ip-address change it can be modified
+		Consumers add/register its ip on DNS [GoDaddy.com]
+	CDN(content-delivery-network)
+		Senario:
+			everytime there is a request coming to the server it reads,processes it then sends a response..this is very time consuming and not efficient.
+		Optimizations:(More optimal as you go down the list)
+			1)server stores a cache on the server itself
+				Network calls are still being made(Unefficient)
+			2)Browser stores the cache on the machine which is requesting it
+				sometimes when there is change in server the cache in local is outdated or is stale now
+			3)CDN:Content delivery network is used to store cache in different regions.
+				saves bandwidth.
+				faster
+				updated on CDN as the main server changes (Main server requests to update it in CDN)
+	How does router know whom to send back the response?
+		Approach-1)Router stores the address of the requester when he/she sends the data to the server as a map sender address mapped to server address, when the response comes back it sends it to the 
+			sender address itself form the map.
+		Approach-2)Storing the mac address of sender in the Router.
+			this has some security concerns as mac-address can be scooped[modified]!!
+		Approach-3)Sendiing the requester address in request itself so when the response comes the router checks the sender address aswell and routes it back to the sender.
+		Generally approch-3 is used in most of the cases but both can be used.
+			--how does this work?
+				--Network address translation (uses Virtual ip-address)[physical address mapping to this virtual address]-->this way you dont send mac addresses(Physical address) but send a virtual one
+						
+	Communication between Router and Browser:
+		Protocols:
+			TCP:(Transmission control protocol)
+				--has to be read.{give acknoledgment that it can read or has read}
+				1)guaranted delivery.
+				2)Order delivery.
+				3)retries
+				4)Idempotency can be controlled.
+					-Method of not sucessfully processed request is independent on the no of times it has been processed.{Financial useCases}{Comments useCases}
+				HTTP:
+					--Stateless[Doesnt store the request on server]
+					--Client - server protocol..
+					--every request will have id associated with it to which the server responds.
+					REST:
+						-Identifiers.
+						-stateless.
+						-cacheble
+					GraphQl:
+						-More customization on what entities of response is needed.
+						-saves bandwidth.
+						-more secure than Rest.{as only required data{entities} are served}
+					Disadvantages:
+						--Head of line blocking {if a request fails then the consecutive requests in queue were blocked as order delivery is guaranted}
+						--HTTP 2.0 solved this issue using gRPC which uses Multiplexing{making requests from different accouts as different stream of requests}
+							--every stream is broken into frames.
+							--Still as HTTP uses TCP..it requires acknoledgment ,this issue is resolved abouve in application level but alternately fails to read consecutive requests after a fail.
+								--This is solved by HTTP 3.0 which is built over UDP.
+					gRPC:{google remote procedure calls}{HTTP 2.0}
+						-openSource RPC framework{remote procedure calls}[previosly owned by google]
+						-client Server architecture
+						-every service is a client when it is sending a request and evry service is a server when it is recieving the request.
+						-used for inter-service requests and responses{between micro-services of a particular application}
+				HTTP-DASH:{DYNAMIC ADAPTIVE STREAMING OVER HTTP}//	HSL for MAC-OS------->Also know QUIC
+					1)order delivery
+					2)gauranteed delivery
+					3)Based on the signal from client and according to that the server responds back{Senario: vdo processing}
+						-adaptive{example}-->requiring certain vdo resolution{adaptive bit-rate}[preferred continues streaming over quality]
+						-connection maintanance-->throughput your device can handle.
+				WebSockets:	
+					--Sever never sends a request to client by its own.
+					--Server sending request to client is to be implementeed by websocket[there is no requests but are messages]{Peer-Peer communication}
+			UDP:{}
+				1)real time delivery{Live vdo streaming}
+				2)Best effort delivery{mail advertisments}
+				3)No acknoledgment.
+				4)no guaranted delivery.
+				SMTP:(Simple mail transfer protocol)
+					Xmpp:{Extensible Messaging and Presence Protocol}[Basically used to build a chat application]
+						--Open XML technology for real time communication which powers a wide range of applications including instant messaging presence,collabrations
+						--peer to peer.
+						--Presence of the other peer.{whatsapp}
+						--Contacts list management{whatsapp}
+						--Instant Messagiing{whatsapp}
+				HTTP 3.0 :
+					1)order delivery
+					2)gauranteed Delivery
+					3)no acknoledgment.
+					4)similar to HTTP but only doesnt run on acknoledgment.
+				WebRtc:
+					1)used for vdo conferencing.
+					2)browser to browser coommunication
+					3)saves bandwidth.
+					4)Is fast.
+					5)Robust.
+					6)No spf{Even if Server fails it will work}
+					How it works?
+						uses users to get authenticated by the server and then gives each user the info {address of other user} and then lets them share information via internet-backbone {client-client}
+						Various Servers help acheive this protocol like STUN, TURN, Media-server--->Order(n2)
